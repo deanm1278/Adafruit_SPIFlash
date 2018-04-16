@@ -32,7 +32,7 @@ Adafruit_SPIFlash::Adafruit_SPIFlash(int8_t ss, SPIClass *spiinterface)
 
 boolean Adafruit_SPIFlash::begin(spiflash_type_t t) {
   type = t;
-
+#ifndef __BF70x__
   if (_clk != -1) {
     pinMode(_clk, OUTPUT);
     pinMode(_mosi, OUTPUT);
@@ -46,8 +46,11 @@ boolean Adafruit_SPIFlash::begin(spiflash_type_t t) {
     misoportreg =  portInputRegister(digitalPinToPort(_miso));
     misopin = digitalPinToBitMask(_miso);
   } else {
+#endif
     _spi->begin();
+#ifndef __BF70x__
   }
+#endif
 
   pinMode(_ss, OUTPUT);
   digitalWrite(_ss, HIGH);  
@@ -139,7 +142,9 @@ void Adafruit_SPIFlash::spiwrite(uint8_t *data, uint16_t length) {
       _spi->transfer(c);
     }
     _spi->endTransaction();
-  } else {
+  }
+#ifndef __BF70x__
+  else {
     // Software SPI
     clkportreg =  portOutputRegister(digitalPinToPort(_clk));
     clkpin = digitalPinToBitMask(_clk);
@@ -169,6 +174,7 @@ void Adafruit_SPIFlash::spiwrite(uint8_t *data, uint16_t length) {
     *clkportreg &= ~clkpin;
     // Make sure clock ends low
   }
+#endif
 }
   
 uint8_t Adafruit_SPIFlash::spiread(void) 
@@ -190,7 +196,9 @@ void Adafruit_SPIFlash::spiread(uint8_t *data, uint16_t length)
       data++;
     }
     _spi->endTransaction();
-  } else {
+  }
+#if 0
+  else {
     // Software SPI
     while (length--) {
        x = shiftIn(_miso, _clk, MSBFIRST);
@@ -217,6 +225,7 @@ void Adafruit_SPIFlash::spiread(uint8_t *data, uint16_t length)
     *clkportreg &= ~clkpin;
     */
   }
+#endif
 }
 
 /**************************************************************************/
@@ -374,10 +383,12 @@ uint32_t Adafruit_SPIFlash::GetJEDECID (void)
   // ID and the device ID
 
   digitalWrite(_ss, LOW);
-  spiwrite(W25Q16BV_CMD_JEDECID ); 
+  spiwrite(W25Q16BV_CMD_JEDECID );
+#if 0
   spiwrite(0x00);            // Dummy write
   spiwrite(0x00);            // Dummy write
   spiwrite(0x00);            // Dummy write
+#endif
 
   uint32_t id;
   id = spiread(); id <<= 8;
